@@ -17,7 +17,7 @@ An AI-powered FIFA World Cup analytics platform using RAG architecture, LLM inte
 ## Setup
 
 ### 1. Clone the repo
-git clone https://github.com/yourusername/fifa-ai-analyst.git
+git clone https://github.com/sachin199914/fifa-ai-analyst
 cd fifa-ai-analyst
 
 ### 2. Backend Setup
