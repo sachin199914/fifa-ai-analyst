@@ -1,0 +1,27 @@
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Environment variables (NEVER upload this)
+.env
+.env.local
+.env*.local
+
+# Next.js
+frontend/.next/
+frontend/node_modules/
+frontend/.turbo/
+
+# Data files (too large for github)
+data/chromadb/
+data/*.csv
+data/chunks.json
+
+# Mac
+.DS_Store
+
+# Kaggle
+kaggle.json
