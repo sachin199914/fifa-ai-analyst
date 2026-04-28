@@ -97,58 +97,74 @@ def get_team_features(team, stats):
         # Unknown team — use neutral values
         return [0.33, 0.33, 0.33, 1.0, 1.0, 0]
 
-def get_head_to_head(team1, team2, df):
-    """Get head to head record between two teams"""
-    h2h = df[
-        ((df['home_team'] == team1) & (df['away_team'] == team2)) |
-        ((df['home_team'] == team2) & (df['away_team'] == team1))
-    ]
+# Precompute H2H dictionary for O(1) lookups
+print("Precomputing H2H dictionary...")
+h2h_dict = {}
+for _, row in results.iterrows():
+    t1, t2 = sorted([row['home_team'], row['away_team']])
+    if (t1, t2) not in h2h_dict:
+        h2h_dict[(t1, t2)] = {'t1_wins': 0, 'draws': 0, 't2_wins': 0, 'total': 0}
     
-    if len(h2h) == 0:
-        return [0, 0, 0]  # No history
-    
-    team1_wins = 0
-    draws = 0
-    team2_wins = 0
-    
-    for _, row in h2h.iterrows():
-        if row['home_team'] == team1:
-            if row['home_score'] > row['away_score']:
-                team1_wins += 1
-            elif row['home_score'] == row['away_score']:
-                draws += 1
-            else:
-                team2_wins += 1
+    h2h_dict[(t1, t2)]['total'] += 1
+    if row['home_score'] > row['away_score']:
+        if row['home_team'] == t1:
+            h2h_dict[(t1, t2)]['t1_wins'] += 1
         else:
-            if row['away_score'] > row['home_score']:
-                team1_wins += 1
-            elif row['away_score'] == row['home_score']:
-                draws += 1
-            else:
-                team2_wins += 1
-    
-    total = len(h2h)
-    return [team1_wins/total, draws/total, team2_wins/total]
+            h2h_dict[(t1, t2)]['t2_wins'] += 1
+    elif row['home_score'] < row['away_score']:
+        if row['home_team'] == t1:
+            h2h_dict[(t1, t2)]['t2_wins'] += 1
+        else:
+            h2h_dict[(t1, t2)]['t1_wins'] += 1
+    else:
+        h2h_dict[(t1, t2)]['draws'] += 1
 
-# ── Build Feature Matrix from World Cup Matches ──
+def get_head_to_head(team1, team2, df=None):
+    """Get head to head record between two teams in O(1)"""
+    t1, t2 = sorted([team1, team2])
+    if (t1, t2) not in h2h_dict:
+        return [0, 0, 0]
+    
+    stats = h2h_dict[(t1, t2)]
+    total = stats['total']
+    
+    if team1 == t1:
+        return [stats['t1_wins']/total, stats['draws']/total, stats['t2_wins']/total]
+    else:
+        return [stats['t2_wins']/total, stats['draws']/total, stats['t1_wins']/total]
+
+# ── Build Feature Matrix from All International Matches ──
 X = []
 y = []
 
-for _, row in matches.iterrows():
-    home = row['Home Team Name']
-    away = row['Away Team Name']
+for _, row in results.iterrows():
+    home = row['home_team']
+    away = row['away_team']
     
     home_features = get_team_features(home, all_stats)
     away_features = get_team_features(away, all_stats)
-    h2h = get_head_to_head(home, away, results)
+    h2h = get_head_to_head(home, away)
     
+    # Original Match
     features = home_features + away_features + h2h
     X.append(features)
     
     # Label: 0=home win, 1=draw, 2=away win
-    if row['Home Team Goals'] > row['Away Team Goals']:
+    if row['home_score'] > row['away_score']:
         y.append(0)
-    elif row['Home Team Goals'] == row['Away Team Goals']:
+    elif row['home_score'] == row['away_score']:
+        y.append(1)
+    else:
+        y.append(2)
+        
+    # Augmented Match (Swapped)
+    h2h_swapped = get_head_to_head(away, home)
+    features_swapped = away_features + home_features + h2h_swapped
+    X.append(features_swapped)
+    
+    if row['away_score'] > row['home_score']:
+        y.append(0)
+    elif row['away_score'] == row['home_score']:
         y.append(1)
     else:
         y.append(2)

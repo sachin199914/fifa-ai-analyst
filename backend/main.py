@@ -112,16 +112,40 @@ def predict_match(request: PredictRequest):
     h2h = get_h2h_neutral()
     features = np.array([home_features + away_features + h2h])
 
-    # Get probabilities
+    # Get raw probabilities
     probs = model.predict_proba(features)[0]
-
-    # Map to labels (0=home win, 1=draw, 2=away win)
     classes = model.classes_
-    prob_map = {c: round(float(p) * 100, 1) for c, p in zip(classes, probs)}
+    prob_map = {c: float(p) for c, p in zip(classes, probs)}
 
-    home_win_prob = prob_map.get(0, 0.0)
-    draw_prob     = prob_map.get(1, 0.0)
-    away_win_prob = prob_map.get(2, 0.0)
+    home_win_prob = prob_map.get(0, 0.33)
+    draw_prob     = prob_map.get(1, 0.33)
+    away_win_prob = prob_map.get(2, 0.33)
+
+
+
+    # ── Probability Calibration ──
+    # The Random Forest generates conservative probabilities (~33% for everything).
+    # We apply a confidence multiplier based on the teams' historical power.
+    def get_power(t):
+        s = team_stats.get(t, {})
+        wr = s.get('win_rate', 0.33)
+        gd = s.get('avg_goals_scored', 1.0) - s.get('avg_goals_conceded', 1.0)
+        return wr + (gd * 0.1)
+
+    home_power = get_power(home)
+    away_power = get_power(away)
+    power_diff = home_power - away_power
+
+    # Aggressively shift probabilities based on power difference
+    home_win_prob = max(0.05, home_win_prob + power_diff)
+    away_win_prob = max(0.05, away_win_prob - power_diff)
+    draw_prob = max(0.05, draw_prob - abs(power_diff * 0.5))
+
+    # Normalize so all probs sum to 100
+    total = home_win_prob + draw_prob + away_win_prob
+    home_win_prob = round((home_win_prob / total) * 100, 1)
+    draw_prob     = round((draw_prob / total) * 100, 1)
+    away_win_prob = round((away_win_prob / total) * 100, 1)
 
     # Determine prediction
     max_prob = max(home_win_prob, draw_prob, away_win_prob)
@@ -140,7 +164,6 @@ def predict_match(request: PredictRequest):
     else:
         confidence = "Low"
 
-    # Team stats for display
     def format_stats(team):
         if team in team_stats:
             s = team_stats[team]

@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 import { useState } from 'react'
 
 const SAMPLE_QUESTIONS = [
@@ -46,13 +47,19 @@ export default function Home() {
     <main className="min-h-screen bg-gray-950 text-white">
       {/* Header */}
       <div className="bg-gray-900 border-b border-gray-800 px-6 py-4">
-        <div className="max-w-3xl mx-auto flex items-center gap-3">
-          <span className="text-3xl">⚽</span>
-          <div>
-            <h1 className="text-xl font-bold">FIFA World Cup AI Analyst</h1>
-            <p className="text-gray-400 text-sm">Powered by RAG + Llama 3.1</p>
-          </div>
-        </div>
+      <div className="max-w-3xl mx-auto flex items-center justify-between">
+  <div className="flex items-center gap-3">
+    <span className="text-3xl">⚽</span>
+    <div>
+      <h1 className="text-xl font-bold">FIFA World Cup AI Analyst</h1>
+      <p className="text-gray-400 text-sm">Powered by RAG + Llama 3.1</p>
+    </div>
+  </div>
+  <div className="flex gap-4 text-sm">
+    <Link href="/" className="text-green-400 font-semibold border-b border-green-400">Q&A</Link>
+    <Link href="/predict" className="text-gray-400 hover:text-white transition-colors">Predictor</Link>
+  </div>
+</div>
       </div>
 
       <div className="max-w-3xl mx-auto px-6 py-8">
