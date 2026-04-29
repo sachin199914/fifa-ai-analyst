@@ -34,7 +34,7 @@ export default function PredictPage() {
 
   // Load teams list on mount
   useEffect(() => {
-    fetch('http://localhost:8000/teams')
+    fetch('https://cover12-fifa-ai-backend.hf.space/teams')
       .then(r => r.json())
       .then(data => setTeams(data.teams))
       .catch(() => setError('Could not load teams list'))
@@ -51,7 +51,7 @@ export default function PredictPage() {
     setError('')
 
     try {
-      const res = await fetch('http://localhost:8000/predict', {
+      const res = await fetch('https://cover12-fifa-ai-backend.hf.space/predict', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ home_team: homeTeam, away_team: awayTeam })

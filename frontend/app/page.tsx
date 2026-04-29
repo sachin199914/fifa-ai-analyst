@@ -25,7 +25,7 @@ export default function Home() {
     setError('')
 
     try {
-      const res = await fetch('http://localhost:8000/ask', {
+      const res = await fetch('https://cover12-fifa-ai-backend.hf.space/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question, n_results: 5 })
