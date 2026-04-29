@@ -1,3 +1,11 @@
+---
+title: Fifa Ai Backend
+emoji: ⚽
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
 # ⚽ FIFA World Cup AI Analyst
 
 An AI-powered FIFA World Cup analytics platform using RAG architecture, LLM integration, and a Next.js full-stack interface.
